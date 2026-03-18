@@ -29,25 +29,22 @@ export function StoryItem({
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
-            {story.url ? (
+            <Link
+              to={`/story/${story.id}`}
+              className="text-zinc-900 font-semibold leading-snug hover:text-orange-600 transition-colors"
+            >
+              {story.title}
+            </Link>
+            {domain && (
               <a
-                href={story.url}
+                href={story.url!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-zinc-900 font-semibold leading-snug hover:text-orange-600 transition-colors"
+                className="ml-2 inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-orange-500 transition-colors"
+                onClick={(e) => e.stopPropagation()}
               >
-                {story.title}
+                ({domain}) ↗
               </a>
-            ) : (
-              <Link
-                to={`/story/${story.id}`}
-                className="text-zinc-900 font-semibold leading-snug hover:text-orange-600 transition-colors"
-              >
-                {story.title}
-              </Link>
-            )}
-            {domain && (
-              <span className="ml-2 text-xs text-zinc-400">({domain})</span>
             )}
           </div>
           {onToggleBookmark && (
