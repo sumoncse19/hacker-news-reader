@@ -1,6 +1,10 @@
 const LOG_LEVELS = ["error", "warn", "info", "debug"] as const;
 
-function log(level: (typeof LOG_LEVELS)[number], message: string, meta?: unknown) {
+function log(
+  level: (typeof LOG_LEVELS)[number],
+  message: string,
+  meta?: unknown,
+) {
   const timestamp = new Date().toISOString();
   const entry = { timestamp, level, message, ...(meta ? { meta } : {}) };
   if (level === "error") {

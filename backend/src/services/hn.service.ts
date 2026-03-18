@@ -17,7 +17,11 @@ function getCached<T>(key: string): T | null {
   return entry.data as T;
 }
 
-function setCache(key: string, data: unknown, ttlMs: number = config.hn.cacheTtlMs): void {
+function setCache(
+  key: string,
+  data: unknown,
+  ttlMs: number = config.hn.cacheTtlMs,
+): void {
   cache.set(key, { data, expiry: Date.now() + ttlMs });
 }
 
@@ -47,7 +51,7 @@ function mapFirebaseStory(item: HNItem): Story {
 }
 
 export async function fetchStoryIds(
-  type: "top" | "new" | "best"
+  type: "top" | "new" | "best",
 ): Promise<number[]> {
   const cacheKey = `story_ids_${type}`;
   const cached = getCached<number[]>(cacheKey);
@@ -82,7 +86,7 @@ export async function fetchStoryById(id: number): Promise<Story> {
 export async function fetchStoriesPaginated(
   type: "top" | "new" | "best",
   page: number,
-  limit: number
+  limit: number,
 ): Promise<{ stories: Story[]; totalPages: number; currentPage: number }> {
   const allIds = await fetchStoryIds(type);
   const start = (page - 1) * limit;
@@ -97,7 +101,7 @@ export async function fetchStoriesPaginated(
         logger.warn(`Failed to fetch story ${id}`, err);
         return null;
       }
-    })
+    }),
   );
 
   return {
@@ -121,12 +125,16 @@ function transformAlgoliaTree(children: AlgoliaItem[]): Comment[] {
     }));
 }
 
-export async function fetchCommentsAlgolia(storyId: number): Promise<Comment[]> {
+export async function fetchCommentsAlgolia(
+  storyId: number,
+): Promise<Comment[]> {
   const url = `${config.hn.algoliaBaseUrl}/items/${storyId}`;
   const res = await fetch(url);
 
   if (!res.ok) {
-    logger.warn(`Algolia API failed for story ${storyId}: ${res.status}, falling back to Firebase`);
+    logger.warn(
+      `Algolia API failed for story ${storyId}: ${res.status}, falling back to Firebase`,
+    );
     return fetchCommentsFirebase(storyId);
   }
 
@@ -139,7 +147,7 @@ export async function fetchCommentsAlgolia(storyId: number): Promise<Comment[]> 
 async function fetchCommentTree(
   id: number,
   depth: number = 0,
-  maxDepth: number = 3
+  maxDepth: number = 3,
 ): Promise<Comment | null> {
   if (depth >= maxDepth) return null;
 
@@ -148,9 +156,9 @@ async function fetchCommentTree(
     if (!item || item.deleted || item.dead || !item.text) return null;
 
     const children = await Promise.all(
-      (item.kids || []).slice(0, 25).map((kidId) =>
-        fetchCommentTree(kidId, depth + 1, maxDepth)
-      )
+      (item.kids || [])
+        .slice(0, 25)
+        .map((kidId) => fetchCommentTree(kidId, depth + 1, maxDepth)),
     );
 
     return {
@@ -170,9 +178,7 @@ async function fetchCommentsFirebase(storyId: number): Promise<Comment[]> {
   if (!story || !story.kids) return [];
 
   const rootIds = story.kids.slice(0, 50);
-  const comments = await Promise.all(
-    rootIds.map((id) => fetchCommentTree(id))
-  );
+  const comments = await Promise.all(rootIds.map((id) => fetchCommentTree(id)));
 
   return comments.filter((c): c is Comment => c !== null);
 }

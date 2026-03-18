@@ -4,6 +4,7 @@ import { config } from "./config";
 import { AppError } from "./utils/errors";
 import { logger } from "./utils/logger";
 import { storiesRouter } from "./routes/stories";
+import { bookmarksRouter } from "./routes/bookmarks";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/stories", storiesRouter);
+app.use("/api/bookmarks", bookmarksRouter);
 
 // Health check
 app.get("/api/health", (_req: Request, res: Response) => {
