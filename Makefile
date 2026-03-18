@@ -1,6 +1,6 @@
-.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev-backend dev-frontend db-migrate db-studio clean
+.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev db dev-backend dev-frontend db-migrate db-studio clean install
 
-# === Docker Compose ===
+# === Docker Compose (Production) ===
 
 up:
 	docker compose up
@@ -34,7 +34,14 @@ logs-frontend:
 logs-db:
 	docker compose logs -f postgres
 
-# === Local Development (without Docker) ===
+# === Local Development (DB in Docker, app on host) ===
+
+db:
+	docker compose up -d postgres
+
+dev: db
+	@echo "Starting backend and frontend dev servers..."
+	@make -j2 dev-backend dev-frontend
 
 dev-backend:
 	cd backend && npm run dev
