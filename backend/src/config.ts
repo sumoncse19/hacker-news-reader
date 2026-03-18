@@ -5,6 +5,7 @@ export const config = {
   port: parseInt(process.env.PORT || "5000", 10),
   databaseUrl: process.env.DATABASE_URL || "",
   geminiApiKey: process.env.GEMINI_API_KEY || "",
+  geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash-preview-05-20",
   hn: {
     firebaseBaseUrl: "https://hacker-news.firebaseio.com/v0",
     algoliaBaseUrl: "https://hn.algolia.com/api/v1",
