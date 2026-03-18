@@ -3,15 +3,14 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 RUN npx prisma generate
 
 COPY . .
-RUN npm run build
 
-EXPOSE 3001
+EXPOSE 5000
 
 CMD ["npm", "start"]
