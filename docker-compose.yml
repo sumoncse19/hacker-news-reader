@@ -22,6 +22,8 @@ services:
     environment:
       DATABASE_URL: postgresql://hn_user:hn_password@postgres:5432/hn_reader
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-preview-05-20}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
       PORT: 5000
     depends_on:
       postgres:
