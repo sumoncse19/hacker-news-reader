@@ -26,6 +26,7 @@ export interface AiSummaryResult {
   summary: string;
   commentCount: number;
   cached: boolean;
+  provider?: string;
 }
 
 // HN Firebase API raw types

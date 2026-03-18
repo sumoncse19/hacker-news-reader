@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import { prisma } from "../lib/prisma";
 import { config } from "../config";
 import { stripHtml } from "../utils/html";
@@ -6,7 +7,9 @@ import { logger } from "../utils/logger";
 import { AiServiceError } from "../utils/errors";
 import type { Comment } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+// Initialize both providers
+const gemini = new GoogleGenAI({ apiKey: config.geminiApiKey });
+const groq = config.groqApiKey ? new Groq({ apiKey: config.groqApiKey }) : null;
 
 interface SummaryResult {
   keyPoints: string[];
@@ -44,8 +47,83 @@ function formatCommentsForPrompt(
   return result;
 }
 
+const SYSTEM_PROMPT = `You are analyzing a Hacker News discussion thread. Return a JSON object with exactly this shape:
+{
+  "keyPoints": ["point 1", "point 2", ...],
+  "sentiment": "positive" | "negative" | "mixed" | "neutral",
+  "summary": "2-4 sentence summary"
+}
+
+Rules:
+- keyPoints: 3-7 concise sentences about what was discussed
+- sentiment: exactly one of "positive", "negative", "mixed", "neutral"
+- summary: 2-4 sentences summarizing the discussion
+- Return ONLY valid JSON, no markdown, no code fences`;
+
+/**
+ * Call Gemini API
+ */
+async function callGemini(prompt: string): Promise<string> {
+  const response = await gemini.models.generateContent({
+    model: config.geminiModel,
+    contents: prompt,
+  });
+  return response.text || "";
+}
+
+/**
+ * Call Groq API (fallback)
+ */
+async function callGroq(
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
+  if (!groq) throw new Error("Groq API key not configured");
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.1-8b-instant",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.3,
+  });
+
+  return response.choices[0]?.message?.content || "";
+}
+
+/**
+ * Parse and validate the AI response
+ */
+function parseResponse(responseText: string): SummaryResult {
+  // Strip markdown code fences if present
+  const cleaned = responseText
+    .replace(/```json\s*/g, "")
+    .replace(/```\s*/g, "")
+    .trim();
+
+  const parsed: SummaryResult = JSON.parse(cleaned);
+
+  if (
+    !Array.isArray(parsed.keyPoints) ||
+    !parsed.sentiment ||
+    !parsed.summary
+  ) {
+    throw new Error("Invalid response shape from AI");
+  }
+
+  const validSentiments = ["positive", "negative", "mixed", "neutral"];
+  if (!validSentiments.includes(parsed.sentiment)) {
+    parsed.sentiment = "neutral";
+  }
+
+  return parsed;
+}
+
 /**
  * Generate AI summary for a story's discussion.
+ * Uses Gemini as primary, falls back to Groq on failure.
  * Returns cached result if available, unless force=true.
  */
 export async function generateSummary(
@@ -83,60 +161,54 @@ export async function generateSummary(
     };
   }
 
-  // Format comments for prompt
   const formattedComments = formatCommentsForPrompt(comments);
 
-  const prompt = `You are analyzing a Hacker News discussion thread for the story titled: "${storyTitle}"
-
-Given the following comments, provide:
-
-1. Key Points: A list of 3-7 key points discussed. Each should be a concise sentence.
-2. Sentiment: The overall sentiment. Must be exactly one of: "positive", "negative", "mixed", "neutral".
-3. Summary: A 2-4 sentence summary of the discussion.
-
-Return ONLY valid JSON with this exact shape, no markdown, no code fences:
-{
-  "keyPoints": ["point 1", "point 2"],
-  "sentiment": "mixed",
-  "summary": "The discussion..."
-}
+  const userPrompt = `Story: "${storyTitle}"
 
 Comments:
 ---
 ${formattedComments}
 ---`;
 
+  const fullPrompt = `${SYSTEM_PROMPT}\n\n${userPrompt}`;
+
+  let parsed: SummaryResult;
+  let provider = "gemini";
+
   try {
-    const response = await ai.models.generateContent({
-      model: config.geminiModel,
-      contents: prompt,
-    });
+    // Try Gemini first
+    logger.info(`Attempting Gemini for story ${storyId}`);
+    const responseText = await callGemini(fullPrompt);
+    parsed = parseResponse(responseText);
+    provider = "gemini";
+    logger.info(`Gemini succeeded for story ${storyId}`);
+  } catch (geminiErr) {
+    logger.warn(
+      `Gemini failed for story ${storyId}, falling back to Groq`,
+      geminiErr,
+    );
 
-    let responseText = response.text || "";
-
-    // Strip markdown code fences if present
-    responseText = responseText
-      .replace(/```json\s*/g, "")
-      .replace(/```\s*/g, "")
-      .trim();
-
-    const parsed: SummaryResult = JSON.parse(responseText);
-
-    // Validate response shape
-    if (
-      !Array.isArray(parsed.keyPoints) ||
-      !parsed.sentiment ||
-      !parsed.summary
-    ) {
-      throw new Error("Invalid response shape from AI");
+    // Fallback to Groq
+    try {
+      if (!groq) {
+        throw new AiServiceError(
+          "Gemini rate limited and Groq not configured. Set GROQ_API_KEY in .env for fallback.",
+        );
+      }
+      const responseText = await callGroq(SYSTEM_PROMPT, userPrompt);
+      parsed = parseResponse(responseText);
+      provider = "groq";
+      logger.info(`Groq fallback succeeded for story ${storyId}`);
+    } catch (groqErr) {
+      logger.error("Both Gemini and Groq failed", groqErr);
+      throw new AiServiceError(
+        groqErr instanceof Error ? groqErr.message : "All AI providers failed",
+      );
     }
+  }
 
-    const validSentiments = ["positive", "negative", "mixed", "neutral"];
-    if (!validSentiments.includes(parsed.sentiment)) {
-      parsed.sentiment = "neutral";
-    }
-
-    // Cache in database (upsert to handle force=true)
+  // Cache in database
+  try {
     await prisma.aiSummary.upsert({
       where: { hnStoryId: storyId },
       update: {
@@ -154,23 +226,16 @@ ${formattedComments}
         commentCount,
       },
     });
-
-    return {
-      keyPoints: parsed.keyPoints,
-      sentiment: parsed.sentiment,
-      summary: parsed.summary,
-      commentCount,
-      cached: false,
-    };
-  } catch (err) {
-    logger.error("AI summary generation failed", err);
-
-    if (err instanceof SyntaxError) {
-      throw new AiServiceError("AI returned invalid JSON response");
-    }
-
-    throw new AiServiceError(
-      err instanceof Error ? err.message : "Failed to generate summary",
-    );
+  } catch (cacheErr) {
+    logger.warn("Failed to cache AI summary", cacheErr);
   }
+
+  return {
+    keyPoints: parsed.keyPoints,
+    sentiment: parsed.sentiment,
+    summary: parsed.summary,
+    commentCount,
+    cached: false,
+    provider,
+  };
 }
