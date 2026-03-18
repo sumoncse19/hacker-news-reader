@@ -9,20 +9,23 @@ export function Header() {
   ];
 
   return (
-    <header className="border-b bg-white sticky top-0 z-10">
-      <div className="container mx-auto px-4 flex items-center justify-between h-14">
-        <Link to="/" className="text-lg font-bold text-orange-600">
-          Smart HN Reader
+    <header className="sticky top-0 z-10 border-b bg-linear-to-r from-orange-500 to-orange-600 shadow-sm">
+      <div className="container mx-auto px-4 max-w-3xl flex items-center justify-between h-14">
+        <Link to="/" className="flex items-center gap-2 text-white">
+          <span className="text-xl">📰</span>
+          <span className="text-lg font-bold tracking-tight">
+            Smart HN Reader
+          </span>
         </Link>
-        <nav className="flex gap-4">
+        <nav className="flex gap-1">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 location.pathname === item.path
-                  ? "text-orange-600"
-                  : "text-zinc-500 hover:text-zinc-700"
+                  ? "bg-white/20 text-white"
+                  : "text-orange-100 hover:bg-white/10 hover:text-white"
               }`}
             >
               {item.label}

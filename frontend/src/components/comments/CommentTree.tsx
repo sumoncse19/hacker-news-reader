@@ -22,9 +22,7 @@ export function CommentTree({ comments, isLoading }: CommentTreeProps) {
   }
 
   if (comments.length === 0) {
-    return (
-      <p className="text-zinc-400 text-center py-8">No comments yet.</p>
-    );
+    return <p className="text-zinc-400 text-center py-8">No comments yet.</p>;
   }
 
   return (

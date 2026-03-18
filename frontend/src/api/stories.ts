@@ -14,7 +14,7 @@ interface CommentsResponse {
 export async function fetchStories(
   type: "top" | "new" | "best",
   page: number,
-  limit: number = 30
+  limit: number = 30,
 ): Promise<StoriesResponse> {
   const { data } = await api.get<StoriesResponse>("/stories", {
     params: { type, page, limit },
@@ -29,7 +29,7 @@ export async function fetchStory(id: number): Promise<Story> {
 
 export async function fetchComments(storyId: number): Promise<Comment[]> {
   const { data } = await api.get<CommentsResponse>(
-    `/stories/${storyId}/comments`
+    `/stories/${storyId}/comments`,
   );
   return data.comments;
 }
