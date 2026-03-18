@@ -2,8 +2,15 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchStory } from "../api/stories";
 import { useComments } from "../hooks/useComments";
-import { useCheckBookmarks, useAddBookmark, useRemoveBookmark } from "../hooks/useBookmarks";
+import {
+  useCheckBookmarks,
+  useAddBookmark,
+  useRemoveBookmark,
+} from "../hooks/useBookmarks";
+import { useSummary } from "../hooks/useSummary";
 import { CommentTree } from "../components/comments/CommentTree";
+import { SummarizeButton } from "../components/ai/SummarizeButton";
+import { SummaryCard } from "../components/ai/SummaryCard";
 import { timeAgo } from "../lib/timeAgo";
 
 export function StoryPage() {
@@ -21,10 +28,13 @@ export function StoryPage() {
   });
 
   const { data: comments, isLoading: commentsLoading } = useComments(storyId);
-  const { data: bookmarkedIds } = useCheckBookmarks(storyId > 0 ? [storyId] : []);
+  const { data: bookmarkedIds } = useCheckBookmarks(
+    storyId > 0 ? [storyId] : [],
+  );
 
   const addBookmark = useAddBookmark();
   const removeBookmark = useRemoveBookmark();
+  const summary = useSummary();
 
   const isBookmarked = bookmarkedIds?.includes(storyId);
 
@@ -35,6 +45,10 @@ export function StoryPage() {
     } else {
       addBookmark.mutate(story);
     }
+  };
+
+  const handleSummarize = (force = false) => {
+    summary.mutate({ storyId, force });
   };
 
   if (storyLoading) {
@@ -102,7 +116,9 @@ export function StoryPage() {
         )}
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-sm text-zinc-500">
-          <span className="text-orange-500 font-semibold">▲ {story.points}</span>
+          <span className="text-orange-500 font-semibold">
+            ▲ {story.points}
+          </span>
           <span className="text-zinc-300">•</span>
           <span>{story.author}</span>
           <span className="text-zinc-300">•</span>
@@ -117,6 +133,36 @@ export function StoryPage() {
             className="mt-4 text-sm text-zinc-700 prose prose-sm max-w-none border-t pt-4"
             dangerouslySetInnerHTML={{ __html: story.text }}
           />
+        )}
+      </div>
+
+      {/* AI Summary Section */}
+      <div className="mb-6">
+        {summary.data ? (
+          <SummaryCard
+            summary={summary.data}
+            onResummarize={() => handleSummarize(true)}
+            isResummarizing={summary.isPending}
+          />
+        ) : (
+          <>
+            <SummarizeButton
+              onClick={() => handleSummarize(false)}
+              isLoading={summary.isPending}
+              commentCount={story.commentCount}
+            />
+            {summary.isError && (
+              <div className="mt-3 bg-red-50 text-red-600 text-sm text-center py-3 rounded-lg border border-red-200">
+                Failed to generate summary.{" "}
+                <button
+                  onClick={() => handleSummarize(false)}
+                  className="underline font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
