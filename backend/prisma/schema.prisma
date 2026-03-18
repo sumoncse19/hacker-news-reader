@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Bookmark {
+  id          Int      @id @default(autoincrement())
+  hnStoryId   Int      @unique
+  title       String
+  url         String?
+  author      String
+  points      Int
+  commentCount Int
+  hnCreatedAt  DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
+}
+
+model AiSummary {
+  id          Int      @id @default(autoincrement())
+  hnStoryId   Int      @unique
+  keyPoints   String[]
+  sentiment   String
+  summary     String
+  commentCount Int
+  createdAt   DateTime @default(now())
+
+  @@index([hnStoryId])
+}
