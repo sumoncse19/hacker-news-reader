@@ -36,7 +36,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({
     error: {
       code: "INTERNAL_ERROR",
-      message: "Something went wrong",
+      message: err.message || "Something went wrong",
       status: 500,
     },
   });
