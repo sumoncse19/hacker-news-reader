@@ -37,9 +37,10 @@ export function StoryPage() {
   const summary = useSummary();
 
   const isBookmarked = bookmarkedIds?.includes(storyId);
+  const isBookmarkLoading = addBookmark.isPending || removeBookmark.isPending;
 
   const handleToggleBookmark = () => {
-    if (!story) return;
+    if (!story || isBookmarkLoading) return;
     if (isBookmarked) {
       removeBookmark.mutate(story.id);
     } else {
@@ -93,14 +94,23 @@ export function StoryPage() {
           </h1>
           <button
             onClick={handleToggleBookmark}
-            className={`text-2xl shrink-0 transition-all hover:scale-110 ${
-              isBookmarked
-                ? "text-orange-500"
-                : "text-zinc-300 hover:text-orange-400"
+            disabled={isBookmarkLoading}
+            className={`text-2xl shrink-0 transition-all hover:scale-110 disabled:opacity-50 ${
+              isBookmarkLoading
+                ? "animate-pulse text-orange-300"
+                : isBookmarked
+                  ? "text-orange-500"
+                  : "text-zinc-300 hover:text-orange-400"
             }`}
-            title={isBookmarked ? "Remove bookmark" : "Bookmark"}
+            title={
+              isBookmarkLoading
+                ? "Saving..."
+                : isBookmarked
+                  ? "Remove bookmark"
+                  : "Bookmark"
+            }
           >
-            {isBookmarked ? "★" : "☆"}
+            {isBookmarkLoading ? "⏳" : isBookmarked ? "★" : "☆"}
           </button>
         </div>
 

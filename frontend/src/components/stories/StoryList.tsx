@@ -5,6 +5,7 @@ interface StoryListProps {
   stories: Story[];
   startRank: number;
   bookmarkedIds?: number[];
+  loadingStoryId?: number | null;
   onToggleBookmark?: (story: Story) => void;
 }
 
@@ -12,6 +13,7 @@ export function StoryList({
   stories,
   startRank,
   bookmarkedIds,
+  loadingStoryId,
   onToggleBookmark,
 }: StoryListProps) {
   if (stories.length === 0) {
@@ -26,6 +28,7 @@ export function StoryList({
           story={story}
           rank={startRank + i}
           isBookmarked={bookmarkedIds?.includes(story.id)}
+          isBookmarkLoading={loadingStoryId === story.id}
           onToggleBookmark={onToggleBookmark}
         />
       ))}

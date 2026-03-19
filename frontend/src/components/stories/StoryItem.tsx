@@ -6,6 +6,7 @@ interface StoryItemProps {
   story: Story;
   rank?: number;
   isBookmarked?: boolean;
+  isBookmarkLoading?: boolean;
   onToggleBookmark?: (story: Story) => void;
 }
 
@@ -13,6 +14,7 @@ export function StoryItem({
   story,
   rank,
   isBookmarked,
+  isBookmarkLoading,
   onToggleBookmark,
 }: StoryItemProps) {
   const domain = story.url
@@ -51,16 +53,25 @@ export function StoryItem({
             <button
               onClick={(e) => {
                 e.preventDefault();
-                onToggleBookmark(story);
+                if (!isBookmarkLoading) onToggleBookmark(story);
               }}
-              className={`shrink-0 text-lg transition-all hover:scale-110 ${
-                isBookmarked
-                  ? "text-orange-500"
-                  : "text-zinc-200 group-hover:text-zinc-400 hover:text-orange-400!"
+              disabled={isBookmarkLoading}
+              className={`shrink-0 text-lg transition-all hover:scale-110 disabled:opacity-50 ${
+                isBookmarkLoading
+                  ? "animate-pulse text-orange-300"
+                  : isBookmarked
+                    ? "text-orange-500"
+                    : "text-zinc-200 group-hover:text-zinc-400 hover:text-orange-400!"
               }`}
-              title={isBookmarked ? "Remove bookmark" : "Bookmark"}
+              title={
+                isBookmarkLoading
+                  ? "Saving..."
+                  : isBookmarked
+                    ? "Remove bookmark"
+                    : "Bookmark"
+              }
             >
-              {isBookmarked ? "★" : "☆"}
+              {isBookmarkLoading ? "⏳" : isBookmarked ? "★" : "☆"}
             </button>
           )}
         </div>

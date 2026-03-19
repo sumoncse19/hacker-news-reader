@@ -12,6 +12,7 @@ import type { FeedType, Story } from "../types";
 export function FeedPage() {
   const [feedType, setFeedType] = useState<FeedType>("top");
   const [page, setPage] = useState(1);
+  const [loadingStoryId, setLoadingStoryId] = useState<number | null>(null);
 
   const { data, isLoading, error } = useStories(feedType, page);
 
@@ -28,10 +29,16 @@ export function FeedPage() {
 
   const handleToggleBookmark = (story: Story) => {
     const isBookmarked = bookmarkedIds?.includes(story.id);
+    setLoadingStoryId(story.id);
+
     if (isBookmarked) {
-      removeBookmark.mutate(story.id);
+      removeBookmark.mutate(story.id, {
+        onSettled: () => setLoadingStoryId(null),
+      });
     } else {
-      addBookmark.mutate(story);
+      addBookmark.mutate(story, {
+        onSettled: () => setLoadingStoryId(null),
+      });
     }
   };
 
@@ -65,6 +72,7 @@ export function FeedPage() {
             stories={data.stories}
             startRank={(page - 1) * 30 + 1}
             bookmarkedIds={bookmarkedIds}
+            loadingStoryId={loadingStoryId}
             onToggleBookmark={handleToggleBookmark}
           />
           <div className="flex items-center justify-between py-6 border-t mt-2">
