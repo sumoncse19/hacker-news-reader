@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useStories } from "../hooks/useStories";
-import { useCheckBookmarks, useAddBookmark, useRemoveBookmark } from "../hooks/useBookmarks";
+import {
+  useCheckBookmarks,
+  useAddBookmark,
+  useRemoveBookmark,
+} from "../hooks/useBookmarks";
 import { FeedTabs } from "../components/stories/FeedTabs";
-import { StoryItem } from "../components/stories/StoryItem";
+import { StoryList } from "../components/stories/StoryList";
 import type { FeedType, Story } from "../types";
 
 export function FeedPage() {
@@ -38,7 +42,10 @@ export function FeedPage() {
       {isLoading && (
         <div className="space-y-2 py-2">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="animate-pulse px-4 py-3 rounded-lg bg-zinc-50">
+            <div
+              key={i}
+              className="animate-pulse px-4 py-3 rounded-lg bg-zinc-50"
+            >
               <div className="h-5 bg-zinc-200 rounded w-3/4 mb-2" />
               <div className="h-3 bg-zinc-100 rounded w-1/2" />
             </div>
@@ -54,17 +61,12 @@ export function FeedPage() {
 
       {data && (
         <>
-          <div className="divide-y-0">
-            {data.stories.map((story, i) => (
-              <StoryItem
-                key={story.id}
-                story={story}
-                rank={(page - 1) * 30 + i + 1}
-                isBookmarked={bookmarkedIds?.includes(story.id)}
-                onToggleBookmark={handleToggleBookmark}
-              />
-            ))}
-          </div>
+          <StoryList
+            stories={data.stories}
+            startRank={(page - 1) * 30 + 1}
+            bookmarkedIds={bookmarkedIds}
+            onToggleBookmark={handleToggleBookmark}
+          />
           <div className="flex items-center justify-between py-6 border-t mt-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
