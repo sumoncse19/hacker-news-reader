@@ -4,7 +4,7 @@ A Hacker News client with AI-powered discussion summaries. Built with React, Exp
 
 ## Live Demo
 
-- **App**: https://smart-hn-reader.vercel.app
+- **App**: https://hacker-news-reader-tau.vercel.app/
 - **API**: https://hacker-news-reader-api.onrender.com/api
 
 > Note: Render free tier backend spins down after 15 min of inactivity. First request after idle takes ~30s to cold start.
@@ -25,6 +25,7 @@ docker-compose up
 ```
 
 The app will be available at:
+
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000/api
 
@@ -64,30 +65,30 @@ Both are optional but at least one is needed for AI summaries. If Gemini hits ra
 
 ### Tech Stack
 
-| Component | Choice | Why |
-|---|---|---|
-| Frontend | React 18 + TypeScript + Vite 7 | Fast build, no SSR needed for this app |
-| Styling | Tailwind CSS v4 | Utility-first, functional and clean |
-| State | TanStack Query | Built-in caching, loading/error states, pagination |
-| Backend | Express 5 + TypeScript | Lightweight, universally understood |
-| ORM | Prisma 7 | Type-safe queries, easy migrations |
-| Database | PostgreSQL | Robust, supports ILIKE for bookmark search |
-| AI (primary) | Gemini 2.5 Flash | Free tier, fast, good quality |
-| AI (fallback) | Groq (Llama 3.1 8B) | Free, auto-fallback when Gemini rate-limited |
-| Infra | Docker Compose | 3 services, one command to start |
+| Component     | Choice                         | Why                                                |
+| ------------- | ------------------------------ | -------------------------------------------------- |
+| Frontend      | React 18 + TypeScript + Vite 7 | Fast build, no SSR needed for this app             |
+| Styling       | Tailwind CSS v4                | Utility-first, functional and clean                |
+| State         | TanStack Query                 | Built-in caching, loading/error states, pagination |
+| Backend       | Express 5 + TypeScript         | Lightweight, universally understood                |
+| ORM           | Prisma 7                       | Type-safe queries, easy migrations                 |
+| Database      | PostgreSQL                     | Robust, supports ILIKE for bookmark search         |
+| AI (primary)  | Gemini 2.5 Flash               | Free tier, fast, good quality                      |
+| AI (fallback) | Groq (Llama 3.1 8B)            | Free, auto-fallback when Gemini rate-limited       |
+| Infra         | Docker Compose                 | 3 services, one command to start                   |
 
 ### API Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/stories` | Fetch stories (`?type=top\|new\|best&page=1&limit=30`) |
-| GET | `/api/stories/:id` | Single story details |
-| GET | `/api/stories/:id/comments` | Threaded comment tree |
-| GET | `/api/bookmarks` | List bookmarks (`?search=query&page=1`) |
-| POST | `/api/bookmarks` | Save a bookmark |
-| DELETE | `/api/bookmarks/:hnStoryId` | Remove a bookmark |
-| GET | `/api/bookmarks/check` | Check bookmark status (`?ids=1,2,3`) |
-| POST | `/api/stories/:id/summarize` | Generate AI summary (`?force=true` to regenerate) |
+| Method | Endpoint                     | Description                                            |
+| ------ | ---------------------------- | ------------------------------------------------------ |
+| GET    | `/api/stories`               | Fetch stories (`?type=top\|new\|best&page=1&limit=30`) |
+| GET    | `/api/stories/:id`           | Single story details                                   |
+| GET    | `/api/stories/:id/comments`  | Threaded comment tree                                  |
+| GET    | `/api/bookmarks`             | List bookmarks (`?search=query&page=1`)                |
+| POST   | `/api/bookmarks`             | Save a bookmark                                        |
+| DELETE | `/api/bookmarks/:hnStoryId`  | Remove a bookmark                                      |
+| GET    | `/api/bookmarks/check`       | Check bookmark status (`?ids=1,2,3`)                   |
+| POST   | `/api/stories/:id/summarize` | Generate AI summary (`?force=true` to regenerate)      |
 
 ### Database Schema
 
@@ -107,15 +108,15 @@ Gemini 2.5 Flash is the primary AI provider. If it fails (rate limit, timeout), 
 
 ## Tradeoffs
 
-| Decision | Tradeoff |
-|---|---|
-| Proxy HN API through backend | Adds latency but solves CORS, enables batching and caching |
-| Algolia for comments instead of Firebase | Not the "official" API, but eliminates N+1 problem (1 request vs 200+) |
-| In-memory cache for HN data | Lost on restart. Redis would be better for production but overkill here |
-| ILIKE for bookmark search | Simpler than full-text search (tsvector). Fine for a personal bookmark list |
-| Gemini + Groq dual provider | Redundancy for rate limits. Both are free tier |
-| AI summary caching in DB | Stale if new comments arrive, but avoids redundant LLM calls. "Re-summarize" button covers this |
-| tsx runtime instead of compiled JS | Simplifies Prisma v7 ESM/CJS compatibility. Acceptable for this scope |
+| Decision                                 | Tradeoff                                                                                        |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Proxy HN API through backend             | Adds latency but solves CORS, enables batching and caching                                      |
+| Algolia for comments instead of Firebase | Not the "official" API, but eliminates N+1 problem (1 request vs 200+)                          |
+| In-memory cache for HN data              | Lost on restart. Redis would be better for production but overkill here                         |
+| ILIKE for bookmark search                | Simpler than full-text search (tsvector). Fine for a personal bookmark list                     |
+| Gemini + Groq dual provider              | Redundancy for rate limits. Both are free tier                                                  |
+| AI summary caching in DB                 | Stale if new comments arrive, but avoids redundant LLM calls. "Re-summarize" button covers this |
+| tsx runtime instead of compiled JS       | Simplifies Prisma v7 ESM/CJS compatibility. Acceptable for this scope                           |
 
 ## Assumptions
 
