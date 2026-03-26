@@ -6,6 +6,7 @@ A Hacker News client with AI-powered discussion summaries. Built with React, Exp
 
 - **App**: https://hacker-news-reader-tau.vercel.app/
 - **API**: https://hacker-news-reader-api.onrender.com/api
+- **Demo Video**: https://www.loom.com/share/1fab83352b6940239b1441a3161d3792
 
 > Note: Render free tier backend spins down after 15 min of inactivity. First request after idle takes ~30s to cold start.
 

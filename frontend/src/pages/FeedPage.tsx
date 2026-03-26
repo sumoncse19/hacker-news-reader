@@ -43,7 +43,7 @@ export function FeedPage() {
   };
 
   return (
-    <div>
+    <div className="pb-16">
       <FeedTabs active={feedType} onChange={handleFeedChange} />
 
       {isLoading && (
@@ -75,24 +75,34 @@ export function FeedPage() {
             loadingStoryId={loadingStoryId}
             onToggleBookmark={handleToggleBookmark}
           />
-          <div className="flex items-center justify-between py-6 border-t mt-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 bg-white disabled:opacity-30 hover:bg-zinc-50 transition-colors"
-            >
-              ← Previous
-            </button>
-            <span className="text-sm text-zinc-400">
-              Page {data.currentPage} of {data.totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page >= data.totalPages}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-orange-500 text-white disabled:opacity-30 hover:bg-orange-600 transition-colors"
-            >
-              Next →
-            </button>
+
+          {/* Sticky pagination at bottom */}
+          <div className="fixed bottom-0 left-0 right-0 z-10 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <div className="container mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setPage((p) => Math.max(1, p - 1));
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={page <= 1}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-zinc-200 bg-white disabled:opacity-30 hover:bg-zinc-50 transition-colors"
+              >
+                ← Previous
+              </button>
+              <span className="text-sm text-zinc-400">
+                Page {data.currentPage} of {data.totalPages}
+              </span>
+              <button
+                onClick={() => {
+                  setPage((p) => p + 1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                disabled={page >= data.totalPages}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-orange-500 text-white disabled:opacity-30 hover:bg-orange-600 transition-colors"
+              >
+                Next →
+              </button>
+            </div>
           </div>
         </>
       )}
