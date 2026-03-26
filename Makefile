@@ -1,4 +1,4 @@
-.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev db dev-backend dev-frontend db-migrate db-studio clean install
+.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev db dev-backend dev-frontend db-migrate db-reset db-studio clean install
 
 # === Docker Compose (Production) ===
 
@@ -56,6 +56,9 @@ install:
 
 db-migrate:
 	cd backend && npx prisma migrate dev
+
+db-reset:
+	cd backend && npx prisma migrate reset --force
 
 db-studio:
 	cd backend && npx prisma studio
