@@ -44,13 +44,13 @@ dev: db
 	@make -j2 dev-backend dev-frontend
 
 dev-backend:
-	cd backend && uvicorn app.main:app --reload --port 5000
+	cd backend && .venv/bin/uvicorn app.main:app --reload --port 5000
 
 dev-frontend:
 	cd frontend && npm run dev
 
 install:
-	cd backend && pip install -r requirements.txt && cd ../frontend && npm install
+	cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && cd ../frontend && npm install
 
 # === Cleanup ===
 
