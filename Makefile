@@ -1,4 +1,4 @@
-.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev db dev-backend dev-frontend db-migrate db-studio clean install
+.PHONY: up down build restart logs logs-backend logs-frontend logs-db dev db dev-backend dev-frontend clean install
 
 # === Docker Compose (Production) ===
 
@@ -44,26 +44,15 @@ dev: db
 	@make -j2 dev-backend dev-frontend
 
 dev-backend:
-	cd backend && npm run dev
+	cd backend && uvicorn app.main:app --reload --port 5000
 
 dev-frontend:
 	cd frontend && npm run dev
 
 install:
-	cd backend && npm install && cd ../frontend && npm install
-
-# === Database ===
-
-db-migrate:
-	cd backend && npx prisma migrate dev
-
-db-studio:
-	cd backend && npx prisma studio
-
-db-generate:
-	cd backend && npx prisma generate
+	cd backend && pip install -r requirements.txt && cd ../frontend && npm install
 
 # === Cleanup ===
 
 clean:
-	rm -rf backend/dist backend/node_modules frontend/dist frontend/node_modules
+	rm -rf backend/__pycache__ backend/app/__pycache__ frontend/dist frontend/node_modules

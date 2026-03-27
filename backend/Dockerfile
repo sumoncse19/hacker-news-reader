@@ -1,16 +1,12 @@
-FROM node:20-alpine
+FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --include=dev
-
-COPY prisma ./prisma
-COPY prisma.config.ts ./
-RUN npx prisma generate
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]

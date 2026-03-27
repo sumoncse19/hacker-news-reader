@@ -10,3 +10,4 @@ backend/src/generated/
 # IDE
 .vscode/
 .idea/
+backend_old
